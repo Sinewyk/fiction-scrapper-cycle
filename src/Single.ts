@@ -34,7 +34,6 @@ export function Single(sources: Sources): Sinks {
   }
 }
 
-const IsolateSingle = (sources: Sources, stuff?: string): Sinks =>
-  isolate(Single, stuff)(sources)
+const IsolateSingle = (sources: Sources): Sinks => isolate(Single)(sources)
 
 export default IsolateSingle

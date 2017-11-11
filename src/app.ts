@@ -5,19 +5,27 @@ import Single, { Sinks as SingleSinks } from './Single'
 
 export default function main(sources: Sources): Sinks {
   const stuff$ = sources.initialData
-    .map(url => {
-      console.log(`should only be called once per url ${url}`)
-      return Single({
-        url: xs.of(url),
+    .fold<{
+      [url: string]: SingleSinks
+    }>((acc, initialUrl) => {
+      if (acc[initialUrl]) {
+        return acc
+      }
+      console.log(`should only be called once per url ${initialUrl}`)
+      acc[initialUrl] = Single({
+        url: xs.of(initialUrl),
         HTTP: sources.HTTP,
       })
-    })
-    .fold<SingleSinks[]>((acc, x) => acc.concat(x), [])
+      return acc
+    }, {})
     .last()
-    .map(sinks => ({
-      console: xs.merge(...sinks.map(s => s.console)),
-      HTTP: xs.merge(...sinks.map(s => s.HTTP)),
-    }))
+    .map(sinksPerInitialUrl => {
+      const values: SingleSinks[] = (Object as any).values(sinksPerInitialUrl)
+      return {
+        console: xs.merge(...values.map(s => s.console)),
+        HTTP: xs.merge(...values.map(s => s.HTTP)),
+      }
+    })
 
   const sinks = extractSinks(stuff$, ['console', 'HTTP'])
 
