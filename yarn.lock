@@ -11,15 +11,19 @@
     superagent "3.7.0"
     xstream "11.x.x"
 
-"@cycle/run@3.4":
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/@cycle/run/-/run-3.4.0.tgz#113844add669ace91d245842522f3733ba5bd393"
+"@cycle/isolate@>=3":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@cycle/isolate/-/isolate-3.2.0.tgz#8ffddb9b05cb9a4fbcf812794c0e5285af341051"
+
+"@cycle/run@*", "@cycle/run@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@cycle/run/-/run-4.0.0.tgz#d48c5133cd783afdf7f9e37ce1c158b570d6c5f1"
   dependencies:
     xstream "10.x || 11.x"
 
-"@cycle/run@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@cycle/run/-/run-4.0.0.tgz#d48c5133cd783afdf7f9e37ce1c158b570d6c5f1"
+"@cycle/run@3.4":
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/@cycle/run/-/run-3.4.0.tgz#113844add669ace91d245842522f3733ba5bd393"
   dependencies:
     xstream "10.x || 11.x"
 
@@ -27,7 +31,7 @@
   version "8.0.51"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.51.tgz#b31d716fb8d58eeb95c068a039b9b6292817d5fb"
 
-"@types/superagent@3.5.6":
+"@types/superagent@3.5.6", "@types/superagent@^3.5.6":
   version "3.5.6"
   resolved "https://registry.yarnpkg.com/@types/superagent/-/superagent-3.5.6.tgz#9cf2632c075ba9e601f6a610aadc23992d02394c"
   dependencies:
@@ -54,6 +58,20 @@ cookiejar@^2.1.0:
 core-util-is@~1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
+
+cycle-onionify@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/cycle-onionify/-/cycle-onionify-4.0.0.tgz#9aeddd88dedf6fda9fbb98b1e79ab38810b7ddda"
+  dependencies:
+    "@cycle/isolate" ">=3"
+    "@cycle/run" "*"
+    xstream ">=10"
+
+cyclejs-utils@^3.0.4:
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/cyclejs-utils/-/cyclejs-utils-3.0.4.tgz#3405f78a31fd330d5e679d7fa0eba6b674ecda72"
+  dependencies:
+    cycle-onionify "^4.0.0"
 
 debug@^3.1.0:
   version "3.1.0"
@@ -168,7 +186,7 @@ util-deprecate@~1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
 
-"xstream@10.x || 11.x", xstream@11.x.x, xstream@^11.0.0:
+"xstream@10.x || 11.x", xstream@11.x.x, xstream@>=10, xstream@^11.0.0:
   version "11.0.0"
   resolved "https://registry.yarnpkg.com/xstream/-/xstream-11.0.0.tgz#2018c3c4e573f76b62b9cf96a17a46876ab120e0"
   dependencies:
