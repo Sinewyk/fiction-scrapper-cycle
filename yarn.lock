@@ -3,26 +3,29 @@
 
 
 "@cycle/http@^14.5.0":
-  version "14.5.0"
-  resolved "https://registry.yarnpkg.com/@cycle/http/-/http-14.5.0.tgz#05b44ca3e675c92802bd1b9c95a2263ab826e2d5"
+  version "14.8.0"
+  resolved "https://registry.yarnpkg.com/@cycle/http/-/http-14.8.0.tgz#f688e0390761a122e765ba8c5ba61357df6ff664"
   dependencies:
-    "@cycle/run" "3.x"
+    "@cycle/run" "3.4"
     "@types/superagent" "3.5.6"
-    superagent "3.6.3"
+    superagent "3.7.0"
+    xstream "11.x.x"
 
-"@cycle/run@3.x", "@cycle/run@^3.3.0":
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/@cycle/run/-/run-3.3.0.tgz#a00dd638e0e9349fcf0d7b7628f9f37309559b9f"
+"@cycle/run@3.4":
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/@cycle/run/-/run-3.4.0.tgz#113844add669ace91d245842522f3733ba5bd393"
   dependencies:
     xstream "10.x || 11.x"
 
-"@types/node@*":
-  version "8.0.40"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.40.tgz#260f0440db0643f034c9103bba0be777ce25317c"
+"@cycle/run@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@cycle/run/-/run-4.0.0.tgz#d48c5133cd783afdf7f9e37ce1c158b570d6c5f1"
+  dependencies:
+    xstream "10.x || 11.x"
 
-"@types/node@^8.0.40":
-  version "8.0.45"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.45.tgz#89fad82439d5624e1b5c6b42f0f5d85136dcdecc"
+"@types/node@*", "@types/node@^8.0.40":
+  version "8.0.51"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.51.tgz#b31d716fb8d58eeb95c068a039b9b6292817d5fb"
 
 "@types/superagent@3.5.6":
   version "3.5.6"
@@ -138,9 +141,9 @@ string_decoder@~1.0.3:
   dependencies:
     safe-buffer "~5.1.0"
 
-superagent@3.6.3:
-  version "3.6.3"
-  resolved "https://registry.yarnpkg.com/superagent/-/superagent-3.6.3.tgz#eb95fcb576a9d23a730a9d0789731b5379a36cdc"
+superagent@3.7.0:
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/superagent/-/superagent-3.7.0.tgz#bd58bfde2cbc5305adb9ccbb6dacba18408629d6"
   dependencies:
     component-emitter "^1.2.0"
     cookiejar "^2.1.0"
@@ -165,7 +168,7 @@ util-deprecate@~1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
 
-"xstream@10.x || 11.x", xstream@^11.0.0:
+"xstream@10.x || 11.x", xstream@11.x.x, xstream@^11.0.0:
   version "11.0.0"
   resolved "https://registry.yarnpkg.com/xstream/-/xstream-11.0.0.tgz#2018c3c4e573f76b62b9cf96a17a46876ab120e0"
   dependencies:
