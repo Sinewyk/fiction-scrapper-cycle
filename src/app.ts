@@ -1,19 +1,35 @@
-import xs from 'xstream'
-import { Sources, Sinks } from './interfaces'
+import xs, { Stream } from 'xstream'
 import { extractSinks } from 'cyclejs-utils'
-import Single, { Sinks as SingleSinks } from './Single'
+import { StateSource } from 'cycle-onionify'
+import { HTTPSource, HTTPSink, ConsoleSourceOrSink } from './interfaces'
+import Single, { Sinks as SingleSinks, State as SingleState } from './Single'
 
-export default function main(sources: Sources): Sinks {
+export type State = { [url: string]: SingleState }
+
+export interface Sources {
+  initialData: Stream<string>
+  HTTP: HTTPSource
+}
+export type Reducer = (prev?: State) => State | undefined
+export interface Sinks {
+  HTTP: HTTPSink
+  console: ConsoleSourceOrSink
+}
+
+export default function main(
+  sources: Sources & {
+    onion: StateSource<State>
+  },
+): Sinks & { onion: Stream<Reducer> } {
   const stuff$ = sources.initialData
-    .fold<{
-      [url: string]: SingleSinks
-    }>((acc, initialUrl) => {
+    .fold<{ [url: string]: SingleSinks }>((acc, initialUrl) => {
       if (acc[initialUrl]) {
         return acc
       }
       acc[initialUrl] = Single({
         url: xs.of(initialUrl),
         HTTP: sources.HTTP,
+        onion: sources.onion,
       })
       return acc
     }, {})
@@ -28,8 +44,5 @@ export default function main(sources: Sources): Sinks {
 
   const sinks = extractSinks(stuff$, ['console', 'HTTP'])
 
-  return {
-    console: sinks.console,
-    HTTP: sinks.HTTP,
-  }
+  return { console: sinks.console, HTTP: sinks.HTTP, onion: xs.never() }
 }
