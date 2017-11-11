@@ -1,6 +1,7 @@
 import xs, { Stream } from 'xstream'
 import { HTTPSource } from '@cycle/http'
 import { ConsoleSourceOrSink, HTTPSink } from './interfaces'
+import isolate from '@cycle/isolate'
 
 export interface Sources {
   HTTP: HTTPSource
@@ -12,7 +13,7 @@ export interface Sinks {
   HTTP: HTTPSink
 }
 
-export default function Single(sources: Sources): Sinks {
+export function Single(sources: Sources): Sinks {
   return {
     console: sources.url
       .map(initialUrl =>
@@ -32,3 +33,8 @@ export default function Single(sources: Sources): Sinks {
     HTTP: sources.url,
   }
 }
+
+const IsolateSingle = (sources: Sources, stuff?: string): Sinks =>
+  isolate(Single, stuff)(sources)
+
+export default IsolateSingle

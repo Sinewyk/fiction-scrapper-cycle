@@ -1,15 +1,13 @@
 import xs from 'xstream'
 import { Sources, Sinks } from './interfaces'
 import { extractSinks } from 'cyclejs-utils'
-import isolate from '@cycle/isolate'
 import Single, { Sinks as SingleSinks } from './Single'
 
 export default function main(sources: Sources): Sinks {
   const stuff$ = sources.initialData
     .map(url => {
-      console.log(`Should be called once ${url}`)
-      const isolateSingle = isolate(Single, url)
-      return isolateSingle({
+      console.log(`should only be called once per url ${url}`)
+      return Single({
         url: xs.of(url),
         HTTP: sources.HTTP,
       })
