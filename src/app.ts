@@ -11,7 +11,6 @@ export default function main(sources: Sources): Sinks {
       if (acc[initialUrl]) {
         return acc
       }
-      console.log(`should only be called once per url ${initialUrl}`)
       acc[initialUrl] = Single({
         url: xs.of(initialUrl),
         HTTP: sources.HTTP,
