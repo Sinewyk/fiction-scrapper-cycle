@@ -8,7 +8,7 @@ import { Sources, Sinks } from './interfaces'
 const drivers: Drivers<Sources, Sinks> = {
   initialData: () => xs.from(['initial data']),
   console: makeConsoleDriver(),
-  HTTP: makeHTTPDriver()
+  HTTP: makeHTTPDriver(),
 }
 
 run(app, drivers)
