@@ -2,16 +2,19 @@ import xs from 'xstream'
 import { Sources, Sinks } from './interfaces'
 import { extractSinks } from 'cyclejs-utils'
 import isolate from '@cycle/isolate'
-import Single from './Single'
+import Single, { Sinks as SingleSinks } from './Single'
 
 export default function main(sources: Sources): Sinks {
   const stuff$ = sources.initialData
     .map(url => {
       console.log(`Should be called once ${url}`)
       const isolateSingle = isolate(Single, url)
-      return isolateSingle(sources, url)
+      return isolateSingle({
+        url: xs.of(url),
+        HTTP: sources.HTTP,
+      })
     })
-    .fold<Sinks[]>((acc, x) => acc.concat(x), [])
+    .fold<SingleSinks[]>((acc, x) => acc.concat(x), [])
     .last()
     .map(sinks => ({
       console: xs.merge(...sinks.map(s => s.console)),

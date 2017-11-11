@@ -1,13 +1,16 @@
 import { Stream } from 'xstream'
 import { HTTPSource, RequestOptions } from '@cycle/http'
 
+export type ConsoleSourceOrSink = Stream<string>
+export type HTTPSink = Stream<string | RequestOptions>
+
 export interface Sources {
   initialData: Stream<string>
   HTTP: HTTPSource
-  console: Stream<string>
+  console: ConsoleSourceOrSink
 }
 
 export interface Sinks {
-  HTTP: Stream<string | RequestOptions>
-  console: Stream<string>
+  HTTP: HTTPSink
+  console: ConsoleSourceOrSink
 }
