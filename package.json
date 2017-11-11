@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@cycle/http": "^14.5.0",
+    "@cycle/isolate": "^3.2.0",
     "@cycle/run": "^4.0.0",
     "cyclejs-utils": "^3.0.4",
     "xstream": "^11.0.0"
