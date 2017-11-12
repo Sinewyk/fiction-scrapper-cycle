@@ -1,6 +1,7 @@
 import xs, { Stream } from 'xstream'
 import { extractSinks } from 'cyclejs-utils'
 import { StateSource } from 'cycle-onionify'
+import isolate from '@cycle/isolate'
 import { HTTPSource, HTTPSink, ConsoleSourceOrSink } from './interfaces'
 import Single, { Sinks as SingleSinks, State as SingleState } from './Single'
 
@@ -26,7 +27,8 @@ export default function main(
       if (acc[initialUrl]) {
         return acc
       }
-      acc[initialUrl] = Single({
+      const isolateSingle = isolate(Single)
+      acc[initialUrl] = isolateSingle({
         url: xs.of(initialUrl),
         HTTP: sources.HTTP,
         onion: sources.onion,

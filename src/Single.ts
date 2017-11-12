@@ -1,6 +1,5 @@
 import xs, { Stream } from 'xstream'
 import { HTTPSource } from '@cycle/http'
-import isolate from '@cycle/isolate'
 import { StateSource } from 'cycle-onionify'
 import { ConsoleSourceOrSink, HTTPSink } from './interfaces'
 
@@ -21,7 +20,7 @@ export interface Sinks {
   onion: Stream<Reducer>
 }
 
-export function Single(sources: Sources): Sinks {
+export default function Single(sources: Sources): Sinks {
   return {
     console: sources.url
       .map(initialUrl =>
@@ -42,7 +41,3 @@ export function Single(sources: Sources): Sinks {
     onion: xs.never(),
   }
 }
-
-const IsolateSingle = (sources: Sources): Sinks => isolate(Single)(sources)
-
-export default IsolateSingle
