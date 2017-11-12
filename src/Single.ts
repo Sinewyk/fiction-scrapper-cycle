@@ -3,9 +3,12 @@ import { HTTPSource } from '@cycle/http'
 import { StateSource } from 'cycle-onionify'
 import { ConsoleSourceOrSink, HTTPSink } from './interfaces'
 
-export interface State {}
+export interface State {
+  id: string
+  init: boolean
+}
 
-export type Reducer = (prev?: State) => State | undefined
+export type Reducer = (prev?: State) => State
 export type AppSinks = Sinks & { onion: Stream<Reducer> }
 
 export interface Sources {
@@ -21,23 +24,19 @@ export interface Sinks {
 }
 
 export default function Single(sources: Sources): Sinks {
+  const response$ = sources.HTTP.select().flatten()
+  const reducer$ = xs.empty()
   return {
-    console: sources.url
-      .map(initialUrl =>
-        xs.merge(
-          xs.of(`${initialUrl}\n`),
-          sources.HTTP
-            .select()
-            .flatten()
-            .map(
-              res =>
-                `${initialUrl} fetched ! ${res.text.length}, from request ${res
-                  .request.url}\n`,
-            ),
+    console: sources.onion.state$
+      .map(({ id: initialUrl }) =>
+        response$.map(
+          res =>
+            `${initialUrl} fetched ! ${res.text.length}, from request ${res
+              .request.url}\n`,
         ),
       )
       .flatten(),
-    HTTP: sources.url,
-    onion: xs.never(),
+    HTTP: sources.onion.state$.map(state => state.id),
+    onion: reducer$,
   }
 }

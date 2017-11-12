@@ -1,11 +1,12 @@
 import xs, { Stream } from 'xstream'
-import { extractSinks } from 'cyclejs-utils'
-import { StateSource } from 'cycle-onionify'
+import { StateSource, makeCollection } from 'cycle-onionify'
 import isolate from '@cycle/isolate'
 import { HTTPSource, HTTPSink, ConsoleSourceOrSink } from './interfaces'
-import Single, { Sinks as SingleSinks, State as SingleState } from './Single'
+import Single, { State as SingleState } from './Single'
 
-export type State = { [url: string]: SingleState }
+export type State = {
+  books: SingleState[]
+}
 
 export interface Sources {
   initialData: Stream<string>
@@ -17,34 +18,44 @@ export interface Sinks {
   console: ConsoleSourceOrSink
 }
 
+const Books = makeCollection({
+  item: Single,
+  itemKey: (state: SingleState) => state.id,
+  itemScope: key => key,
+  collectSinks: instances => {
+    return {
+      onion: instances.pickMerge('onion'),
+      console: instances.pickMerge('console'),
+      HTTP: instances.pickMerge('HTTP'),
+    }
+  },
+})
+
 export default function main(
   sources: Sources & {
     onion: StateSource<State>
   },
 ): Sinks & { onion: Stream<Reducer> } {
-  const stuff$ = sources.initialData
-    .fold<{ [url: string]: SingleSinks }>((acc, initialUrl) => {
-      if (acc[initialUrl]) {
-        return acc
-      }
-      const isolateSingle = isolate(Single)
-      acc[initialUrl] = isolateSingle({
-        url: xs.of(initialUrl),
-        HTTP: sources.HTTP,
-        onion: sources.onion,
-      })
-      return acc
-    }, {})
+  const initReducer$ = sources.initialData
+    .fold<SingleState[]>((acc, initialUrl) => {
+      const data = { id: initialUrl, init: true }
+      return acc.concat([data])
+    }, [])
     .last()
-    .map(sinksPerInitialUrl => {
-      const values: SingleSinks[] = (Object as any).values(sinksPerInitialUrl)
-      return {
-        console: xs.merge(...values.map(s => s.console)),
-        HTTP: xs.merge(...values.map(s => s.HTTP)),
-      }
-    })
+    .map(initState => () => ({ books: initState }))
 
-  const sinks = extractSinks(stuff$, ['console', 'HTTP'])
+  const booksSinks = isolate(Books, 'books')(sources)
 
-  return { console: sinks.console, HTTP: sinks.HTTP, onion: xs.never() }
+  const reducer$ = xs.merge<Reducer>(initReducer$, booksSinks.onion)
+
+  return {
+    console: xs.merge<string>(
+      booksSinks.console,
+      sources.onion.state$.map(
+        state => `Current state :\n${JSON.stringify(state, null, '  ')}\n`,
+      ),
+    ),
+    HTTP: booksSinks.HTTP,
+    onion: reducer$,
+  }
 }
