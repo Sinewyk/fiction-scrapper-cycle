@@ -23,8 +23,37 @@ export interface Sinks {
   onion: Stream<Reducer>
 }
 
+export type Actions = {
+  fetchInfos$: Stream<boolean>
+}
+
+// function intent(stateSource: StateSource<State>): Actions {
+//   return {
+//     fetchInfos$: stateSource.state$.map(x => x.init).filter(x => x!),
+//   }
+// }
+
+// function model(actions: Actions): Stream<Reducer> {
+//   const addReducer$ = actions.add$.map(
+//     content =>
+//       function addReducer(prevState: State): State {
+//         return {
+//           ...prevState,
+//           list: prevState.list.concat({
+//             content: content,
+//             count: prevState.counter.count,
+//             key: String(Date.now()),
+//           }),
+//         }
+//       },
+//   )
+
+//   return xs.merge(addReducer$)
+// }
+
 export default function Single(sources: Sources): Sinks {
   const response$ = sources.HTTP.select().flatten()
+  //const actions = intent(sources.onion)
   const reducer$ = xs.empty()
   return {
     console: sources.onion.state$
