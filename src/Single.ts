@@ -6,6 +6,7 @@ import { ConsoleSourceOrSink, HTTPSink } from './interfaces'
 export interface State {
   id: string
   init: boolean
+  infos?: any
 }
 
 export type Reducer = (prev?: State) => State
@@ -23,49 +24,50 @@ export interface Sinks {
   onion: Stream<Reducer>
 }
 
-export type Actions = {
-  fetchInfos$: Stream<boolean>
+const INIT_REQUEST = 'init'
+
+// When state changes, we know what to do, fetch infos, keep fetching or stop
+function intent(onion: StateSource<State>): HTTPSink {
+  return onion.state$
+    .map(x => {
+      if (x.init === true) {
+        return xs.of({
+          url: x.id,
+          category: INIT_REQUEST,
+        })
+      }
+      return xs.empty()
+    })
+    .flatten()
 }
 
-// function intent(stateSource: StateSource<State>): Actions {
-//   return {
-//     fetchInfos$: stateSource.state$.map(x => x.init).filter(x => x!),
-//   }
-// }
+// When http request completes, we know how to change the model
+function model(http$: HTTPSource): Stream<Reducer> {
+  const handleInit$ = http$
+    .select()
+    .flatten()
+    .map(res => (prevState: State) => {
+      switch (res.request.category) {
+        case INIT_REQUEST:
+          return {
+            ...prevState,
+            init: false,
+            infos: res.text,
+          }
+        default:
+          return prevState
+      }
+    })
 
-// function model(actions: Actions): Stream<Reducer> {
-//   const addReducer$ = actions.add$.map(
-//     content =>
-//       function addReducer(prevState: State): State {
-//         return {
-//           ...prevState,
-//           list: prevState.list.concat({
-//             content: content,
-//             count: prevState.counter.count,
-//             key: String(Date.now()),
-//           }),
-//         }
-//       },
-//   )
+  return xs.merge(handleInit$)
+}
 
-//   return xs.merge(addReducer$)
-// }
-
+// And so my cycle is initialState => intent => model until fetch is over =)
+// At the end, just concatenate & transforms and write to disk with a fs driver
 export default function Single(sources: Sources): Sinks {
-  const response$ = sources.HTTP.select().flatten()
-  //const actions = intent(sources.onion)
-  const reducer$ = xs.empty()
   return {
-    console: sources.onion.state$
-      .map(({ id: initialUrl }) =>
-        response$.map(
-          res =>
-            `${initialUrl} fetched ! ${res.text.length}, from request ${res
-              .request.url}\n`,
-        ),
-      )
-      .flatten(),
-    HTTP: sources.onion.state$.map(state => state.id),
-    onion: reducer$,
+    console: xs.empty(),
+    HTTP: intent(sources.onion),
+    onion: model(sources.HTTP),
   }
 }

@@ -3,6 +3,10 @@ import { StateSource, makeCollection } from 'cycle-onionify'
 import isolate from '@cycle/isolate'
 import { HTTPSource, HTTPSink, ConsoleSourceOrSink } from './interfaces'
 import Single, { State as SingleState } from './Single'
+import debounce from 'xstream/extra/debounce'
+import * as debug from 'debug'
+
+const d = debug('app')
 
 export type State = {
   books: SingleState[]
@@ -48,13 +52,14 @@ export default function main(
 
   const reducer$ = xs.merge<Reducer>(initReducer$, booksSinks.onion)
 
+  const debug$ = d.enabled
+    ? sources.onion.state$
+        .map(state => `Current state :\n${JSON.stringify(state, null, '  ')}\n`)
+        .compose(debounce(50))
+    : xs.empty()
+
   return {
-    console: xs.merge<string>(
-      booksSinks.console,
-      sources.onion.state$.map(
-        state => `Current state :\n${JSON.stringify(state, null, '  ')}\n`,
-      ),
-    ),
+    console: xs.merge<string>(booksSinks.console, debug$),
     HTTP: booksSinks.HTTP,
     onion: reducer$,
   }
