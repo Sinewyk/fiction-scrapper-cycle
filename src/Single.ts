@@ -34,6 +34,7 @@ function intent(onion: StateSource<State>): HTTPSink {
         return xs.of({
           url: x.id,
           category: INIT_REQUEST,
+          lazy: true,
         })
       }
       return xs.empty()
