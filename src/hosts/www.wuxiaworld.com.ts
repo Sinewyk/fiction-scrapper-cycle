@@ -7,6 +7,8 @@ export const hostname = 'wuxiaworld.com'
 export function createBookConf(initialUrl: string): BookConf {
   const process = R.pipe<string, url.Url, url.Url, string, string[], string[]>(
     url.parse,
+    // wuxiaworld supports https, it's broken for assets & shit
+    // but we are directly scrapping html so ... force https
     R.assoc('protocol', 'https:'),
     url.format,
     str => str.split('-'),
