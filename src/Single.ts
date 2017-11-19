@@ -4,11 +4,14 @@ import { StateSource } from 'cycle-onionify'
 import { ConsoleSourceOrSink, HTTPSink } from './interfaces'
 import { getBookConf } from './hosts'
 import dropRepeats from 'xstream/extra/dropRepeats'
+import flattenConcurrently from 'xstream/extra/flattenConcurrently'
+import { extractSinks } from 'cyclejs-utils'
 
 enum Status {
+  Init,
   Ok,
-  Error,
   Finished,
+  Error,
 }
 
 interface Chapter {
@@ -19,7 +22,6 @@ interface Chapter {
 
 export interface State {
   id: string
-  init: boolean
   infos?: any
   status: Status
   err?: Error
@@ -41,13 +43,13 @@ export interface Sinks {
   onion: Stream<Reducer>
 }
 
-const INIT_REQUEST = 'init'
+const FETCH_INFOS = 'fetch_infos'
+const FETCH_CHAPTER = 'fetch_chapter'
 
 export function makeInitialState(id: string): State {
   return {
     id,
-    init: true,
-    status: Status.Ok,
+    status: Status.Init,
     chapters: [],
   }
 }
@@ -68,8 +70,14 @@ function intent(onion: StateSource<State>): Sinks {
 
   const httpSink = stateAndConf$
     .map<HTTPSink>(([state, bookConf]) => {
-      if (state.init === true && bookConf.shouldFetchInfos) {
-        return xs.of({ url: state.id, category: INIT_REQUEST, lazy: true })
+      if (state.status === Status.Init && bookConf.shouldFetchInfos) {
+        return xs.of({ url: state.id, category: FETCH_INFOS, lazy: true })
+      } else if (state.status !== Status.Error && state.chapters.length === 0) {
+        return xs.from([1, 2, 3, 4, 5]).map(chapterNumber => ({
+          url: bookConf.getChapterUrl(chapterNumber),
+          category: FETCH_CHAPTER,
+          chapterNumber,
+        }))
       }
       return xs.empty()
     })
@@ -90,15 +98,6 @@ function intent(onion: StateSource<State>): Sinks {
         status: Status.Error,
         err,
       })),
-      stateAndConf$.map<Reducer>(([state, bookConf]) => {
-        if (state.init === true && !bookConf.shouldFetchInfos) {
-          return prevState => ({
-            ...prevState,
-            init: false,
-          })
-        }
-        return x => x
-      }),
     ),
     HTTP: httpSink,
   }
@@ -108,14 +107,27 @@ function intent(onion: StateSource<State>): Sinks {
 function model(http$: HTTPSource): Sinks {
   const handleInit$ = http$
     .select()
-    .flatten()
+    .compose(flattenConcurrently)
     .map(res => (prevState: State) => {
       switch (res.request.category) {
-        case INIT_REQUEST:
+        case FETCH_INFOS:
           return {
             ...prevState,
             init: false,
             infos: 'stuff is fetched',
+          }
+        case FETCH_CHAPTER:
+          return {
+            ...prevState,
+            init: false,
+            chapters: [
+              ...prevState.chapters,
+              {
+                number: res.request.chapterNumber,
+                content: res.request.chapterNumber,
+                status: Status.Ok,
+              },
+            ],
           }
         default:
           return prevState
