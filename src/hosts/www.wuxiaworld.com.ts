@@ -18,6 +18,7 @@ export function createBookConf(initialUrl: string): BookConf {
   const parts = process(initialUrl)
 
   return {
+    shouldFetchInfos: false,
     getChapterUrl: R.pipe<number, string[], string>(
       R.pipe<number, string[], string[]>(x => [x.toString()], R.concat(parts)),
       R.join('-'),

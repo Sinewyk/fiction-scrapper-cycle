@@ -2,7 +2,7 @@ import xs, { Stream } from 'xstream'
 import { StateSource, makeCollection } from 'cycle-onionify'
 import isolate from '@cycle/isolate'
 import { HTTPSource, HTTPSink, ConsoleSourceOrSink } from './interfaces'
-import Single, { State as SingleState } from './Single'
+import Single, { State as SingleState, makeInitialState } from './Single'
 import debounce from 'xstream/extra/debounce'
 import * as debug from 'debug'
 
@@ -41,10 +41,10 @@ export default function main(
   },
 ): Sinks & { onion: Stream<Reducer> } {
   const initReducer$ = sources.initialData
-    .fold<SingleState[]>((acc, initialUrl) => {
-      const data = { id: initialUrl, init: true }
-      return acc.concat([data])
-    }, [])
+    .fold<SingleState[]>(
+      (acc, initialUrl) => [...acc, makeInitialState(initialUrl)],
+      [],
+    )
     .last()
     .map(initState => () => ({ books: initState }))
 

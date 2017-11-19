@@ -14,11 +14,11 @@ const DOMAINS = <{
 export const getBookConf = (initialUrl: string): BookConf => {
   const parsedUrl = url.parse(initialUrl)
 
-  assert(parsedUrl.host, 'It is an url')
+  assert(parsedUrl.host, 'Parameter must be an url')
 
   const bookConfFactory = DOMAINS[parsedUrl.host as string]
 
-  assert(bookConfFactory, 'Host is supported')
+  assert(bookConfFactory, 'Url must be a supported hostname')
 
   return (bookConfFactory as BookConfFactory).createBookConf(initialUrl)
 }

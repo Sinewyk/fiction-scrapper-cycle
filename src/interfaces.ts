@@ -12,5 +12,6 @@ export interface BookConfFactory {
 }
 
 export interface BookConf {
+  shouldFetchInfos: boolean
   getChapterUrl(chapterNumber: number): string
 }
