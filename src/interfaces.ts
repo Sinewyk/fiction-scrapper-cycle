@@ -6,3 +6,11 @@ export type ConsoleSourceOrSink = Stream<string>
 export type HTTPSink = Stream<HTTPSinkEvent>
 export type InitialDataStream = Stream<string>
 export type HTTPSource = HTTPSource
+
+export interface BookConfFactory {
+  createBookConf(initialUrl: string): BookConf
+}
+
+export interface BookConf {
+  getChapterUrl(chapterNumber: number): string
+}
