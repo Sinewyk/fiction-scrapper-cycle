@@ -54,7 +54,23 @@ export function makeInitialState(id: string): State {
   }
 }
 
+/**
+function main(sources) {
+  const state$ = sources.onion.state$;
+  const action$ = intent(sources.DOM);
+  const reducer$ = model(action$);
+  const vdom$ = view(state$);
+
+  const sinks = {
+    DOM: vdom$,
+    onion: reducer$,
+  };
+  return sinks;
+}
+*/
+
 // When state changes, we know what to do
+// Which should mean launching HTTP request & editing state to reflect in flight stuff ?
 function intent(onion: StateSource<State>): Sinks {
   const stateId$ = onion.state$
     .map(state => state.id)
@@ -103,7 +119,7 @@ function intent(onion: StateSource<State>): Sinks {
   }
 }
 
-// When http request completes, we know how to change the model
+// When http request completes, we know how to change the state
 function model(http$: HTTPSource): Sinks {
   const handleInit$ = http$
     .select()
