@@ -1,6 +1,6 @@
-import * as wuxia from '../www.wuxiaworld.com'
+import * as wuxia from '../www.wuxiaworld.com';
 
-import { getBookConf } from '../'
+import { getBookConf } from '../';
 
 describe('hosts', () => {
   const harness = [
@@ -20,32 +20,30 @@ describe('hosts', () => {
         },
       ],
     },
-  ]
+  ];
 
   harness.forEach(testConf => {
     describe(`${testConf.hostname}`, () => {
       testConf.tests.forEach(test => {
         it(`${test.name}`, () => {
-          const bookConf = wuxia.createBookConf(test.initialUrl)
-          expect(bookConf.getChapterUrl(2)).toEqual(test.expectedForChapter2)
-        })
-      })
-    })
-  })
-})
+          const bookConf = wuxia.createBookConf(test.initialUrl);
+          expect(bookConf.getChapterUrl(2)).toEqual(test.expectedForChapter2);
+        });
+      });
+    });
+  });
+});
 
 describe('#getBookConf', () => {
   it('can find a book conf', () => {
-    expect(
-      getBookConf('http://www.wuxiaworld.com/foo/foo-chapter-1'),
-    ).toBeTruthy()
-  })
+    expect(getBookConf('http://www.wuxiaworld.com/foo/foo-chapter-1')).toBeTruthy();
+  });
 
   it('throws on unrecognized hostname', () => {
-    expect(() => getBookConf('http://foo.com')).toThrow()
-  })
+    expect(() => getBookConf('http://foo.com')).toThrow();
+  });
 
   it('throws on unrecognized string', () => {
-    expect(() => getBookConf('foo')).toThrow()
-  })
-})
+    expect(() => getBookConf('foo')).toThrow();
+  });
+});

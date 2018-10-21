@@ -1,11 +1,11 @@
-import xs, { Stream } from 'xstream'
-import { HTTPSource } from '@cycle/http'
-import { StateSource } from 'cycle-onionify'
-import { ConsoleSourceOrSink, HTTPSink } from './interfaces'
-import { getBookConf } from './hosts'
-import dropRepeats from 'xstream/extra/dropRepeats'
-import flattenConcurrently from 'xstream/extra/flattenConcurrently'
-import { extractSinks } from 'cyclejs-utils'
+import xs, { Stream } from 'xstream';
+import { HTTPSource } from '@cycle/http';
+import { StateSource } from 'cycle-onionify';
+import { ConsoleSourceOrSink, HTTPSink } from './interfaces';
+import { getBookConf } from './hosts';
+import dropRepeats from 'xstream/extra/dropRepeats';
+import flattenConcurrently from 'xstream/extra/flattenConcurrently';
+import { extractSinks } from 'cyclejs-utils';
 
 enum Status {
   Init,
@@ -15,43 +15,43 @@ enum Status {
 }
 
 interface Chapter {
-  number: number
-  status: Status
-  content?: string
+  number: number;
+  status: Status;
+  content?: string;
 }
 
 export interface State {
-  id: string
-  infos?: any
-  status: Status
-  err?: Error
-  chapters: Chapter[]
+  id: string;
+  infos?: any;
+  status: Status;
+  err?: Error;
+  chapters: Chapter[];
 }
 
-export type Reducer = (prev: State) => State
-export type AppSinks = Sinks & { onion: Stream<Reducer> }
+export type Reducer = (prev: State) => State;
+export type AppSinks = Sinks & { onion: Stream<Reducer> };
 
 export interface Sources {
-  HTTP: HTTPSource
-  url: Stream<string>
-  onion: StateSource<State>
+  HTTP: HTTPSource;
+  url: Stream<string>;
+  onion: StateSource<State>;
 }
 
 export interface Sinks {
-  console: ConsoleSourceOrSink
-  HTTP: HTTPSink
-  onion: Stream<Reducer>
+  console: ConsoleSourceOrSink;
+  HTTP: HTTPSink;
+  onion: Stream<Reducer>;
 }
 
-const FETCH_INFOS = 'fetch_infos'
-const FETCH_CHAPTER = 'fetch_chapter'
+const FETCH_INFOS = 'fetch_infos';
+const FETCH_CHAPTER = 'fetch_chapter';
 
 export function makeInitialState(id: string): State {
   return {
     id,
     status: Status.Init,
     chapters: [],
-  }
+  };
 }
 
 /**
@@ -75,33 +75,30 @@ function intent(onion: StateSource<State>): Sinks {
   const stateId$ = onion.state$
     .map(state => state.id)
     .compose(dropRepeats())
-    .remember()
+    .remember();
 
-  const bookConf$ = stateId$.map(url => getBookConf(url))
+  const bookConf$ = stateId$.map(url => getBookConf(url));
 
-  const stateAndConf$ = xs.combine(
-    onion.state$,
-    bookConf$.replaceError(xs.empty),
-  )
+  const stateAndConf$ = xs.combine(onion.state$, bookConf$.replaceError(xs.empty));
 
   const httpSink = stateAndConf$
     .map<HTTPSink>(([state, bookConf]) => {
       if (state.status === Status.Init && bookConf.shouldFetchInfos) {
-        return xs.of({ url: state.id, category: FETCH_INFOS, lazy: true })
+        return xs.of({ url: state.id, category: FETCH_INFOS, lazy: true });
       } else if (state.status !== Status.Error && state.chapters.length === 0) {
         return xs.from([1, 2, 3, 4, 5]).map(chapterNumber => ({
           url: bookConf.getChapterUrl(chapterNumber),
           category: FETCH_CHAPTER,
           chapterNumber,
-        }))
+        }));
       }
-      return xs.empty()
+      return xs.empty();
     })
-    .flatten()
+    .flatten();
 
   const error$: Stream<Error> = bookConf$
     .replaceError(err => xs.of(err))
-    .filter(err => err instanceof Error)
+    .filter(err => err instanceof Error);
 
   return {
     console: xs
@@ -116,7 +113,7 @@ function intent(onion: StateSource<State>): Sinks {
       })),
     ),
     HTTP: httpSink,
-  }
+  };
 }
 
 // When http request completes, we know how to change the state
@@ -131,7 +128,7 @@ function model(http$: HTTPSource): Sinks {
             ...prevState,
             init: false,
             infos: 'stuff is fetched',
-          }
+          };
         case FETCH_CHAPTER:
           return {
             ...prevState,
@@ -144,27 +141,27 @@ function model(http$: HTTPSource): Sinks {
                 status: Status.Ok,
               },
             ],
-          }
+          };
         default:
-          return prevState
+          return prevState;
       }
-    })
+    });
 
   return {
     onion: handleInit$,
     HTTP: xs.empty(),
     console: xs.empty(),
-  }
+  };
 }
 
 // And so my cycle is initialState => intent => model until fetch is over =)
 // At the end, just concatenate & transforms and write to disk with a fs driver
 export default function Single(sources: Sources): Sinks {
-  const intentSinks = intent(sources.onion)
-  const modelSinks = model(sources.HTTP)
+  const intentSinks = intent(sources.onion);
+  const modelSinks = model(sources.HTTP);
   return {
     console: xs.merge(intentSinks.console, modelSinks.console),
     HTTP: intentSinks.HTTP,
     onion: xs.merge(intentSinks.onion, modelSinks.onion),
-  }
+  };
 }

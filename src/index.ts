@@ -1,9 +1,9 @@
-import xs from 'xstream'
-import { run, Drivers } from '@cycle/run'
-import app, { Sources, Sinks } from './app'
-import { makeConsoleDriver } from './drivers/console'
-import { makeHTTPDriver } from '@cycle/http'
-import onionify from 'cycle-onionify'
+import xs from 'xstream';
+import { run, Drivers } from '@cycle/run';
+import app, { Sources, Sinks } from './app';
+import { makeConsoleDriver } from './drivers/console';
+import { makeHTTPDriver } from '@cycle/http';
+import onionify from 'cycle-onionify';
 
 const drivers: Drivers<Sources, Sinks> = {
   initialData: () =>
@@ -16,6 +16,6 @@ const drivers: Drivers<Sources, Sinks> = {
     ]),
   console: makeConsoleDriver(),
   HTTP: makeHTTPDriver(),
-}
+};
 
-run(onionify(app), drivers)
+run(onionify(app), drivers);

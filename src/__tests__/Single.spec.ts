@@ -1,3 +1,3 @@
 describe('Single', () => {
-  it('foo', () => {})
-})
+  it('foo', () => {});
+});
