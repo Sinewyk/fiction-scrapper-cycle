@@ -1,26 +1,12 @@
-import xs, { Stream } from 'xstream';
-import { StateSource, makeCollection } from 'cycle-onionify';
+import xs from 'xstream';
 import isolate from '@cycle/isolate';
-import { HTTPSource, HTTPSink, ConsoleSourceOrSink } from './interfaces';
-import Single, { State as SingleState, makeInitialState } from './Single';
+import { makeCollection } from '@cycle/state';
+import { Sources, Sinks, RootState, Reducer } from './interfaces';
+import Single, { SingleState, makeInitialState } from './Single';
 import debounce from 'xstream/extra/debounce';
 import * as debug from 'debug';
 
 const d = debug('app');
-
-export type State = {
-  books: SingleState[];
-};
-
-export interface Sources {
-  initialData: Stream<string>;
-  HTTP: HTTPSource;
-}
-export type Reducer = (prev?: State) => State | undefined;
-export interface Sinks {
-  HTTP: HTTPSink;
-  console: ConsoleSourceOrSink;
-}
 
 const Books = makeCollection({
   item: Single,
@@ -28,18 +14,14 @@ const Books = makeCollection({
   itemScope: key => key,
   collectSinks: instances => {
     return {
-      onion: instances.pickMerge('onion'),
+      state: instances.pickMerge('state'),
       console: instances.pickMerge('console'),
       HTTP: instances.pickMerge('HTTP'),
     };
   },
 });
 
-export default function main(
-  sources: Sources & {
-    onion: StateSource<State>;
-  },
-): Sinks & { onion: Stream<Reducer> } {
+export default function main(sources: Sources): Sinks {
   const initReducer$ = sources.initialData
     .fold<SingleState[]>((acc, initialUrl) => [...acc, makeInitialState(initialUrl)], [])
     .last()
@@ -47,17 +29,17 @@ export default function main(
 
   const booksSinks = isolate(Books, 'books')(sources);
 
-  const reducer$ = xs.merge<Reducer>(initReducer$, booksSinks.onion);
+  const reducer$ = xs.merge<Reducer<RootState>, Reducer<RootState>>(initReducer$, booksSinks.state);
 
   const debug$ = d.enabled
-    ? sources.onion.state$
+    ? sources.state.stream
         .map(state => `Current state :\n${JSON.stringify(state, null, '  ')}\n`)
         .compose(debounce(50))
     : xs.empty();
 
   return {
-    console: xs.merge<string>(booksSinks.console, debug$),
+    state: reducer$,
     HTTP: booksSinks.HTTP,
-    onion: reducer$,
+    console: xs.merge<string>(booksSinks.console, debug$),
   };
 }

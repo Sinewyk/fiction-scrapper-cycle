@@ -1,11 +1,11 @@
 import xs from 'xstream';
-import { run, Drivers } from '@cycle/run';
-import app, { Sources, Sinks } from './app';
+import { run } from '@cycle/run';
+import main from './main';
 import { makeConsoleDriver } from './drivers/console';
 import { makeHTTPDriver } from '@cycle/http';
-import onionify from 'cycle-onionify';
+import { withState } from '@cycle/state';
 
-const drivers: Drivers<Sources, Sinks> = {
+const drivers = {
   initialData: () =>
     // feed from commander or yargs or something
     xs.fromArray([
@@ -18,4 +18,4 @@ const drivers: Drivers<Sources, Sinks> = {
   HTTP: makeHTTPDriver(),
 };
 
-run(onionify(app), drivers);
+run(withState(main), drivers);

@@ -7,11 +7,16 @@ interface Options {
 
 export function makeConsoleDriver(options: Options = {}): Driver<Stream<string>, Stream<string>> {
   return function consoleDriver(sink) {
+    if (!sink) {
+      return xs.empty();
+    }
+
     sink.subscribe({
       next: msg => process.stdout.write(msg),
       error: err => process.stderr.write(err),
       complete: () => {},
     });
+
     if (options.listenToStdin) {
       const stream = xs.create<string>({
         start: listener =>
@@ -26,6 +31,7 @@ export function makeConsoleDriver(options: Options = {}): Driver<Stream<string>,
       });
       return stream;
     }
+
     return xs.empty();
   };
 }
