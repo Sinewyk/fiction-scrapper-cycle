@@ -1,11 +1,10 @@
 import xs, { Stream } from 'xstream';
-import { HTTPSource } from '@cycle/http';
+import { HTTPSource, Response } from '@cycle/http';
 import { StateSource } from '@cycle/state';
-import { ConsoleSourceOrSink, HTTPSink } from './interfaces';
+import { ConsoleSourceOrSink, HTTPSink, HTTPSinkEvent } from './interfaces';
 import { getBookConf } from './hosts';
 import dropRepeats from 'xstream/extra/dropRepeats';
 import flattenConcurrently from 'xstream/extra/flattenConcurrently';
-import { extractSinks } from 'cyclejs-utils';
 
 enum Status {
   Init,
@@ -81,12 +80,12 @@ function intent(state: StateSource<SingleState>): Sinks {
 
   const stateAndConf$ = xs.combine(state.stream, bookConf$.replaceError(xs.empty));
 
-  const httpSink = stateAndConf$
+  const httpSink$ = stateAndConf$
     .map<HTTPSink>(([state, bookConf]) => {
       if (state.status === Status.Init && bookConf.shouldFetchInfos) {
-        return xs.of({ url: state.id, category: FETCH_INFOS, lazy: true });
+        return xs.of<HTTPSinkEvent>({ url: state.id, category: FETCH_INFOS, lazy: true });
       } else if (state.status !== Status.Error && state.chapters.length === 0) {
-        return xs.from([1, 2, 3, 4, 5]).map(chapterNumber => ({
+        return xs.from([1, 2, 3, 4, 5]).map<HTTPSinkEvent>(chapterNumber => ({
           url: bookConf.getChapterUrl(chapterNumber),
           category: FETCH_CHAPTER,
           chapterNumber,
@@ -97,6 +96,7 @@ function intent(state: StateSource<SingleState>): Sinks {
     .flatten();
 
   const error$: Stream<Error> = bookConf$
+    .filter(() => false)
     .replaceError(err => xs.of(err))
     .filter(err => err instanceof Error);
 
@@ -105,14 +105,13 @@ function intent(state: StateSource<SingleState>): Sinks {
       .combine(stateId$, error$)
       .map(([id, err]) => `Error while fetching ${id}: ${err.message}\n`),
     state: xs.merge(
-      error$.map(err => (prevState: SingleState) => ({
+      error$.map<Reducer>(err => (prevState: SingleState) => ({
         ...prevState,
-        init: false,
         status: Status.Error,
         err,
       })),
     ),
-    HTTP: httpSink,
+    HTTP: httpSink$,
   };
 }
 
@@ -121,7 +120,7 @@ function model(http$: HTTPSource): Sinks {
   const handleInit$ = http$
     .select()
     .compose(flattenConcurrently)
-    .map(res => (prevState: SingleState) => {
+    .map((res: Response & { request: { chapterNumber: number } }) => (prevState: SingleState) => {
       switch (res.request.category) {
         case FETCH_INFOS:
           return {
@@ -137,7 +136,7 @@ function model(http$: HTTPSource): Sinks {
               ...prevState.chapters,
               {
                 number: res.request.chapterNumber,
-                content: res.request.chapterNumber,
+                content: res.body,
                 status: Status.Ok,
               },
             ],
